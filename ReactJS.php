@@ -1,4 +1,6 @@
 <?php
+
+use Chenos\V8JsModuleLoader\ModuleLoader;
 /**!
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
@@ -61,7 +63,26 @@ class ReactJS {
 
     $concatenated = implode(";\n", $react);
 
+    $dir = base_path();
+
+    // entry directory
+    $loader = new ModuleLoader($dir);
+
+    $loader->setExtensions('.js', '.json');
+
+    $loader->setEntryDir($dir);
+
+    // v8js version > 2.1.0+
+    $loader->addOverride(['fn' => function (...$args) {}]);
+    $loader->addOverride('obj', new stdClass());
+
+    $loader->addVendorDir($dir.'/node_modules', $dir.'/bower_components');
+
     $this->v8 = new V8Js();
+
+    $this->v8->setModuleNormaliser([$loader, 'normaliseIdentifier']);
+    $this->v8->setModuleLoader([$loader, 'loadModule']);
+
     $this->executeJS($concatenated);
   }
 
